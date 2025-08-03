@@ -49,24 +49,30 @@ survy$Q5 <- factor(survy$Q5, levels = c("Strongly Agree", "Agree", "Neutral", "D
 survy$Q6 <- factor(survy$Q6, levels = c("Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree"))
 survy$Q7 <- factor(survy$Q7, levels = c("Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree"))
 survy$Q8 <- factor(survy$Q8, levels = c("Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree"))
-datatable(head(survy), options = list(pageLength=50, scrollX='400px'), filter = 'top')
+
+
+survy$Q5rev <-  if_else(survy$Q2 %in% "Aware Prior to Donation", survy$Q5, NA)
+survy$Q6rev <-  if_else(survy$Q2 %in% "Aware Prior to Donation", survy$Q6, NA)
+
+datatable(head(survy,9), options = list(pageLength=50, scrollX='400px'), filter = 'top')                        
 ```
 
-### Analysis{.tabset}
-#### Table 1
+### Analysis{.tabset .active}
+#### Table 1 
 ```{r class.source = 'fold-hide', warning=FALSE,  message=FALSE, results='show'}
+
 survy %>% tbl_summary(by = age_group,
-                      include = c(Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8),
+                      include = c(Q1, Q2, Q3, Q4, Q5rev, Q6rev, Q7, Q8),
                       label = list(Q1 = "Q1. Do you know what Hemoglobin A1C testing is?",
                                    Q2 = "Q2. When did you learned that the ARC was offering 
                                    HbA1C testing in March?",
                                    Q3 = "Q3. Prior to your recent donation were you aware of your A1C level?",
                                    Q4 = "Q4. Learning my A1C level through a blood donation is of interest to me.",
-                                   Q5 = "Q5. I scheduled an appointment to give so that I could receive a complimentary A1C test.",
-                                   Q6 = "Q6. Knowing about complimentary A1C testing was a factor in my decision to donate blood in March.",
+                                   Q5rev = "Q5*. I scheduled an appointment to give so that I could receive a complimentary A1C test.",
+                                   Q6rev = "Q6*. Knowing about complimentary A1C testing was a factor in my decision to donate blood in March.",
                                    Q7 = "Q7. Hemoglobin A1C testing would motivate me to schedule a donation appointment in the future.",
                                    Q8 = "Q8. Receiving complementary health screenings will influence me to donate blood in the future."
-                      )
+                      ), missing = "no"
                       # value = list(
                                     # Q1 = "Yes",
                                     # Q2 = "Yes",
@@ -76,17 +82,20 @@ survy %>% tbl_summary(by = age_group,
                                     # Q6 = "Yes",
                                     # Q7 = "Yes",
                                     # Q8 = "Yes")
-                      )%>% 
+                      )%>% remove_row_type(variables = c(Q5rev, Q6rev), type = "missing") %>%
   modify_spanning_header(all_stat_cols() ~ "**Age-Groups**") %>%
   modify_header(label = "**Survey Questions**", p.value = "**P**") %>%
   modify_header(all_stat_cols() ~ "**{level}**, N = {n} ({style_percent(p)}%)") |>
     add_p() %>% modify_caption("**Analysis of donor responses to questionnaire survey after 03'2025 A1c Testing**") |> 
+  modify_table_styling(columns = label, rows = label == "Q5*. I scheduled an appointment to give so that I could receive a complimentary A1C test.",
+                       footnote = "*among donors who were aware of the A1c testing prior to donation in March") %>%
+  modify_table_styling(columns = label, rows = label == "Q6*. Knowing about complimentary A1C testing was a factor in my decision to donate blood in March.", footnote = "*among donors who were aware of the A1c testing prior to donation in March") %>%
   bold_labels() 
 ```
 
 #### Bar-plots {.tabset}
 ##### Q1
-```{r class.source = 'fold-hide', warning=FALSE,  message=FALSE, results='show'}
+```{r class.source = 'fold-hide', warning=FALSE,  message=FALSE, results='show',fig.width=12, fig.height=6, out.width="100%", out.height="100%"}
 survy$Q1 <- factor(survy$Q1, levels = c("Yes", "No", "Unsure"))
 df <- survy %>% filter(Gender != "") %>%
   group_by(Gender,age_group,Q1) %>%
@@ -99,14 +108,14 @@ p <- ggplot(df, aes(x = age_group, y = percent)) +
     stat = "identity", position = position_dodge(0.8),
     width = 0.7
   )  + facet_wrap(~Gender) + coord_flip() 
-p +  geom_text(aes(label=paste0(counts,"(", 100*percent,"%)"), 
+p +  geom_text(aes(label=paste0(counts," (", 100*percent,"%)"), 
                    group = reorder(Q1, desc(Q1))), 
                position = position_dodge(0.8), 
-               hjust = 0.9, size = 3.1, angle = 0) + 
+               hjust = "auto", size = 4.5, angle = 0) + 
   scale_fill_manual(values=rev(wes_palette(n=4, name="Zissou1")), 
                     # breaks = c("Yes", "No", "Unsure"),
                     guide = guide_legend(reverse = TRUE)
-  ) + 
+  ) + theme(axis.title = element_text(size = 13, face = )) + theme(text = element_text(size = 15))+
   scale_y_continuous(labels = scales::percent) +
   # theme(axis.text.y = element_blank()) +
   labs(y = "percent of donors responding", x ="donor age-group", fill="response") + 
@@ -121,7 +130,7 @@ p +  geom_text(aes(label=paste0(counts,"(", 100*percent,"%)"),
 ```
 
 ##### Q2
-```{r class.source = 'fold-hide', warning=FALSE,  message=FALSE, results='show'}
+```{r class.source = 'fold-hide', warning=FALSE,  message=FALSE, results='show',fig.width=12, fig.height=6, out.width="100%", out.height="100%"}
 survy$Q2 <- factor(survy$Q2, levels = c("Aware Prior to Donation", "Learned at Donation", "Unaware"))
 df <- survy %>% filter(Gender != "") %>%
   group_by(Gender,age_group,Q2) %>%
@@ -134,14 +143,14 @@ p <- ggplot(df, aes(x = age_group, y = percent)) +
     stat = "identity", position = position_dodge(0.8),
     width = 0.7
   )  + facet_wrap(~Gender) + coord_flip() 
-p +  geom_text(aes(label=paste0(counts,"(", 100*percent,"%)"), 
+p +  geom_text(aes(label=paste0(counts," (", 100*percent,"%)"), 
                    group = reorder(Q2, desc(Q2))), 
                position = position_dodge(0.8), 
-               hjust = 0.9, size = 3.1, angle = 0) + 
+               hjust = 0.9, size = 4.5, angle = 0) + 
   scale_fill_manual(values=rev(wes_palette(n=3, name="Zissou1")), 
                     # breaks = c("Yes", "No", "Unsure"),
                     guide = guide_legend(reverse = TRUE)
-  ) + 
+  ) + theme(axis.title = element_text(size = 13, face = )) + theme(text = element_text(size = 15))+
   scale_y_continuous(labels = scales::percent) +
   # theme(axis.text.y = element_blank()) +
   labs(y = "percent of donors responding", x ="donor age-group", fill="response") + 
@@ -152,7 +161,7 @@ p +  geom_text(aes(label=paste0(counts,"(", 100*percent,"%)"),
 
 
 ##### Q3
-```{r class.source = 'fold-hide', warning=FALSE,  message=FALSE, results='show'}
+```{r class.source = 'fold-hide', warning=FALSE,  message=FALSE, results='show',fig.width=12, fig.height=6, out.width="100%", out.height="100%"}
 survy$Q3 <- factor(survy$Q3, levels = c("Yes", "No", "Unsure"))
 df <- survy %>% filter(Gender != "") %>%
   group_by(Gender,age_group,Q3) %>%
@@ -165,14 +174,14 @@ p <- ggplot(df, aes(x = age_group, y = percent)) +
     stat = "identity", position = position_dodge(0.8),
     width = 0.7
   )  + facet_wrap(~Gender) + coord_flip() 
-p +  geom_text(aes(label=paste0(counts,"(", 100*percent,"%)"), 
+p +  geom_text(aes(label=paste0(counts," (", 100*percent,"%)"), 
                    group = reorder(Q3, desc(Q3))), 
                position = position_dodge(0.8), 
-               hjust = 0.6, size = 3.1, angle = 0) + 
+               hjust = 0.6, size = 4.5, angle = 0) + 
   scale_fill_manual(values=rev(wes_palette(n=4, name="Zissou1")), 
                     # breaks = c("Yes", "No", "Unsure"),
                     guide = guide_legend(reverse = TRUE)
-  ) + 
+  ) +  theme(axis.title = element_text(size = 13, face = )) + theme(text = element_text(size = 15))+
   scale_y_continuous(labels = scales::percent) +
   # theme(axis.text.y = element_blank()) +
   labs(y = "percent of donors responding", x ="donor age-group", fill="response") + 
@@ -188,7 +197,7 @@ p +  geom_text(aes(label=paste0(counts,"(", 100*percent,"%)"),
 
 
 ##### Q4
-```{r class.source = 'fold-hide', warning=FALSE,  message=FALSE, results='show',fig.width=12, fig.height=6, out.width="100%", out.height="60%"}
+```{r class.source = 'fold-hide', warning=FALSE,  message=FALSE, results='show',fig.width=12, fig.height=6, out.width="100%", out.height="100%"}
 survy$Q4 <- factor(survy$Q4, levels = c("Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree"))
 df <- survy %>% filter(Gender != "") %>%
   group_by(Gender,age_group,Q4) %>%
@@ -201,28 +210,28 @@ p <- ggplot(df, aes(x = age_group, y = percent)) +
     stat = "identity", position = position_dodge(0.8),
     width = 0.7
   )  + facet_wrap(~Gender) + coord_flip() 
-p +  geom_text(aes(label=paste0(counts,"(", 100*percent,"%)"), 
+p +  geom_text(aes(label=paste0(counts," (", 100*percent,"%)"), 
                    group = reorder(Q4, desc(Q4))), 
                position = position_dodge(0.8), 
-               hjust = 0.9, size = 3.1, angle = 0) + 
+               hjust = "auto", size = 4.5, angle = 0) + 
   scale_fill_manual(values=rev(wes_palette(n=5, name="Zissou1")), 
                     # breaks = c("Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree"),
                     guide = guide_legend(reverse = TRUE)
-  ) + 
+  ) +  theme(axis.title = element_text(size = 13, face = )) + theme(text = element_text(size = 15))+
   scale_y_continuous(labels = scales::percent) +
   # theme(axis.text.y = element_blank()) +
   labs(y = "percent of donors responding", x ="donor age-group", fill="response") + 
   guides(color = guide_legend(title = "New Species Title"))+
   # scale_y_discrete(breaks = NULL) +
-  ggtitle("Q4. Learning my A1C level through a blood donation is of interest to me.")+ theme(legend.position = "top")
+  ggtitle("Q4. Learning my A1C level through a blood donation is of interest to me.")+ theme(legend.position = "right")
 
 ```
 
 
 ##### Q5
-```{r class.source = 'fold-hide', warning=FALSE,  message=FALSE, results='show',fig.width=12, fig.height=6, out.width="100%", out.height="60%"}
+```{r class.source = 'fold-hide', warning=FALSE,  message=FALSE, results='show',fig.width=12, fig.height=6, out.width="100%", out.height="100%"}
 survy$Q5 <- factor(survy$Q5, levels = c("Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree"))
-df <- survy %>% filter(Gender != "") %>%
+df <- survy %>% filter(Gender != "" & Q2 == "Aware Prior to Donation" ) %>%
   group_by(Gender,age_group,Q5) %>%
   summarise(counts = n()) %>% 
   mutate(percent = round(counts/sum(counts), digits = 2))
@@ -236,14 +245,15 @@ p <- ggplot(df, aes(x = age_group, y = percent)) +
 p +  geom_text(aes(label=paste0(counts,"(", 100*percent,"%)"), 
                    group = reorder(Q5, desc(Q5))), 
                position = position_dodge(0.8), 
-               hjust = 1, size = 3.1, angle = 0) + 
+               hjust = 1, size = 4.5, angle = 0) + 
   scale_fill_manual(values=rev(wes_palette(n=5, name="Zissou1")), 
                     # breaks = c("Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree"),
                     guide = guide_legend(reverse = TRUE)
-  ) + 
+  ) + theme(axis.title = element_text(size = 13, face = )) + theme(text = element_text(size = 15))+
   scale_y_continuous(labels = scales::percent) +
   # theme(axis.text.y = element_blank()) +
-  labs(y = "percent of donors responding", x ="donor age-group", fill="response") + 
+  labs(y = "percent of donors responding", x ="donor age-group", fill="response", 
+       subtitle = "(among donors who were aware of the A1c testing prior to donation)") + 
   guides(color = guide_legend(title = "New Species Title"))+
   # scale_y_discrete(breaks = NULL) +
   ggtitle("Q5. I scheduled an appointment to give so that I could receive a complimentary A1C test.")
@@ -252,9 +262,9 @@ p +  geom_text(aes(label=paste0(counts,"(", 100*percent,"%)"),
 
 
 ##### Q6 
-```{r class.source = 'fold-hide', warning=FALSE,  message=FALSE, results='show',fig.width=12, fig.height=6, out.width="100%", out.height="60%"}
+```{r class.source = 'fold-hide', warning=FALSE,  message=FALSE, results='show',fig.width=12, fig.height=6, out.width="100%", out.height="100%"}
 survy$Q6 <- factor(survy$Q6, levels = c("Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree"))
-df <- survy %>% filter(Gender != "") %>%
+df <- survy %>% filter(Gender != "" & Q2 == "Aware Prior to Donation" ) %>%
   group_by(Gender,age_group,Q6) %>%
   summarise(counts = n()) %>% 
   mutate(percent = round(counts/sum(counts), digits = 2))
@@ -268,22 +278,24 @@ p <- ggplot(df, aes(x = age_group, y = percent)) +
 p +  geom_text(aes(label=paste0(counts,"(", 100*percent,"%)"), 
                    group = reorder(Q6, desc(Q6))), 
                position = position_dodge(0.8), 
-               hjust = 1, size = 3.1, angle = 0) + 
+               hjust = 1, size = 4.5, angle = 0) + 
   scale_fill_manual(values=rev(wes_palette(n=5, name="Zissou1")), 
                     # breaks = c("Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree"),
                     guide = guide_legend(reverse = TRUE)
-  ) + 
+  ) + theme(axis.title = element_text(size = 13, face = )) + theme(text = element_text(size = 15))+
   scale_y_continuous(labels = scales::percent) +
   # theme(axis.text.y = element_blank()) +
-  labs(y = "percent of donors responding", x ="donor age-group", fill="response") + 
-  guides(color = guide_legend(title = "New Species Title"))+
+  labs(y = "percent of donors responding", x ="donor age-group", fill="response", 
+       subtitle = "(among donors who were aware of the A1c testing prior to donation)") + 
+  guides(color = guide_legend(title = "response"))+
   # scale_y_discrete(breaks = NULL) +
-  ggtitle("Q6. Knowing about complimentary A1C testing was a factor in my decision to donate blood in March.")
+  ggtitle("Q6. Knowing about complimentary A1C testing was a factor in my decision to donate blood in March.") 
+  
 ```
 
 
 ##### Q7
-```{r class.source = 'fold-hide', warning=FALSE,  message=FALSE, results='show',fig.width=12, fig.height=6, out.width="100%", out.height="60%"}
+```{r class.source = 'fold-hide', warning=FALSE,  message=FALSE, results='show',fig.width=12, fig.height=6, out.width="100%", out.height="100%"}
 survy$Q7 <- factor(survy$Q7, levels = c("Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree"))
 # reorder(Q7, desc(Q7))
 df <- survy %>% filter(Gender != "") %>%
@@ -297,25 +309,25 @@ p <- ggplot(df, aes(x = age_group, y = percent)) +
     stat = "identity", position = position_dodge(0.8),
     width = 0.7
   )  + facet_wrap(~Gender) + coord_flip() 
-p +  geom_text(aes(label=paste0(counts,"(", 100*percent,"%)"), 
+p +  geom_text(aes(label=paste0(counts," (", 100*percent,"%)"), 
                group = reorder(Q7, desc(Q7))), 
                position = position_dodge(0.8), 
-               hjust = 1, size = 3.1, angle = 0) + 
+               hjust = 1, size = 4.5, angle = 0) + 
   scale_fill_manual(values=rev(wes_palette(n=5, name="Zissou1")), 
                     # breaks = c("Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree"),
                     guide = guide_legend(reverse = TRUE)
-                    ) + 
+                    ) + theme(axis.title = element_text(size = 13, face = )) + theme(text = element_text(size = 15))+
   scale_y_continuous(labels = scales::percent) +
   # theme(axis.text.y = element_blank()) +
   labs(y = "percent of donors responding", x ="donor age-group", fill="response") + 
-  guides(color = guide_legend(title = "New Species Title"))+
+  guides(color = guide_legend(title = "response"))+
   # scale_y_discrete(breaks = NULL) +
   ggtitle("Q7. Hemoglobin A1C testing would motivate me to schedule a donation appointment in the future.")
 ```
 
 
 ##### Q8 
-```{r class.source = 'fold-hide', warning=FALSE,  message=FALSE, results='show',fig.width=12, fig.height=6, out.width="100%", out.height="60%"}
+```{r class.source = 'fold-hide', warning=FALSE,  message=FALSE, results='show',fig.width=12, fig.height=6, out.width="100%", out.height="100%"}
 survy$Q8 <- factor(survy$Q8, levels = c("Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree"))
 df <- survy %>% filter(Gender != "") %>%
   group_by(Gender,age_group,Q8) %>%
@@ -331,7 +343,7 @@ p <- ggplot(df, aes(x = age_group, y = percent)) +
 p +  geom_text(aes(label=paste0(counts,"(", 100*percent,"%)"), 
                    group = reorder(Q8, desc(Q8))), 
                position = position_dodge(0.8), 
-               hjust = 1, size = 3.1, angle = 0) + 
+               hjust = 1, size = 4.5, angle = 0) + 
   scale_fill_manual(values=rev(wes_palette(n=5, name="Zissou1")), 
                     # breaks = c("Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree"),
                     guide = guide_legend(reverse = TRUE)
