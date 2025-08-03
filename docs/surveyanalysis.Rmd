@@ -95,7 +95,7 @@ survy %>% tbl_summary(by = age_group,
 
 #### Bar-plots {.tabset}
 ##### Q1
-```{r class.source = 'fold-hide', warning=FALSE,  message=FALSE, results='show',fig.width=13, fig.height=6, out.width="100%", out.height="100%"}
+```{r class.source = 'fold-hide', warning=FALSE,  message=FALSE, results='show',fig.width=12, fig.height=6, out.width="100%", out.height="100%"}
 survy$Q1 <- factor(survy$Q1, levels = c("Yes", "No", "Unsure"))
 df <- survy %>% filter(Gender != "") %>%
   group_by(Gender,age_group,Q1) %>%
