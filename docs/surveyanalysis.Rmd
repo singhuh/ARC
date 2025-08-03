@@ -95,7 +95,7 @@ survy %>% tbl_summary(by = age_group,
 
 #### Bar-plots {.tabset}
 ##### Q1
-```{r class.source = 'fold-hide', warning=FALSE,  message=FALSE, results='show',fig.width=12, fig.height=6, out.width="100%", out.height="100%"}
+```{r class.source = 'fold-hide', warning=FALSE,  message=FALSE, results='show',fig.width=13, fig.height=6, out.width="100%", out.height="100%"}
 survy$Q1 <- factor(survy$Q1, levels = c("Yes", "No", "Unsure"))
 df <- survy %>% filter(Gender != "") %>%
   group_by(Gender,age_group,Q1) %>%
@@ -111,7 +111,7 @@ p <- ggplot(df, aes(x = age_group, y = percent)) +
 p +  geom_text(aes(label=paste0(counts," (", 100*percent,"%)"), 
                    group = reorder(Q1, desc(Q1))), 
                position = position_dodge(0.8), 
-               hjust = "auto", size = 4.5, angle = 0) + 
+               hjust = 1, size = 4.5, angle = 0) + 
   scale_fill_manual(values=rev(wes_palette(n=4, name="Zissou1")), 
                     # breaks = c("Yes", "No", "Unsure"),
                     guide = guide_legend(reverse = TRUE)
@@ -242,7 +242,7 @@ p <- ggplot(df, aes(x = age_group, y = percent)) +
     stat = "identity", position = position_dodge(0.8),
     width = 0.7
   )  + facet_wrap(~Gender) + coord_flip() 
-p +  geom_text(aes(label=paste0(counts,"(", 100*percent,"%)"), 
+p +  geom_text(aes(label=paste0(counts," (", 100*percent,"%)"), 
                    group = reorder(Q5, desc(Q5))), 
                position = position_dodge(0.8), 
                hjust = 1, size = 4.5, angle = 0) + 
@@ -275,7 +275,7 @@ p <- ggplot(df, aes(x = age_group, y = percent)) +
     stat = "identity", position = position_dodge(0.8),
     width = 0.7
   )  + facet_wrap(~Gender) + coord_flip() 
-p +  geom_text(aes(label=paste0(counts,"(", 100*percent,"%)"), 
+p +  geom_text(aes(label=paste0(counts," (", 100*percent,"%)"), 
                    group = reorder(Q6, desc(Q6))), 
                position = position_dodge(0.8), 
                hjust = 1, size = 4.5, angle = 0) + 
@@ -340,14 +340,14 @@ p <- ggplot(df, aes(x = age_group, y = percent)) +
     stat = "identity", position = position_dodge(0.8),
     width = 0.7
   )  + facet_wrap(~Gender) + coord_flip() 
-p +  geom_text(aes(label=paste0(counts,"(", 100*percent,"%)"), 
+p +  geom_text(aes(label=paste0(counts," (", 100*percent,"%)"), 
                    group = reorder(Q8, desc(Q8))), 
                position = position_dodge(0.8), 
                hjust = 1, size = 4.5, angle = 0) + 
   scale_fill_manual(values=rev(wes_palette(n=5, name="Zissou1")), 
                     # breaks = c("Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree"),
                     guide = guide_legend(reverse = TRUE)
-  ) + 
+  ) + theme(axis.title = element_text(size = 13, face = )) + theme(text = element_text(size = 15)) +
   scale_y_continuous(labels = scales::percent) +
   # theme(axis.text.y = element_blank()) +
   labs(y = "percent of donors responding", x ="donor age-group", fill="response") + 
